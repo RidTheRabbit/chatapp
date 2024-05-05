@@ -1,5 +1,6 @@
 import 'package:chatapp/consts.dart';
 import 'package:chatapp/models/messages.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -33,11 +34,20 @@ class CchatBubble extends StatelessWidget {
                   message.messageText,
                   style: const TextStyle(color: Colors.white),
                 ),
-                Row(
+                 Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.check, color: Colors.grey,size: 22,),
+                      message.isRead ? const Icon(
+                        Icons.done_all_outlined,
+                        color: Colors.grey,
+                        size: 22,
+                      ) 
+                      : const Icon(
+                        Icons.check,
+                        color: Colors.grey,
+                        size: 22,
+                      ),
                   ],
                 )
               ],
@@ -46,9 +56,7 @@ class CchatBubble extends StatelessWidget {
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10.0),
-          child: Align(
-            alignment: Alignment.topLeft,
-            child: Text(getTime())),
+          child: Align(alignment: Alignment.topLeft, child: Text(getTime())),
         )
       ],
     );
@@ -57,20 +65,33 @@ class CchatBubble extends StatelessWidget {
   String getTime() {
     Duration diffrenceDate = DateTime.now().difference(message.date);
     String time;
-    if(diffrenceDate.inDays>1) {
-      return time = '${message.date.day}-${message.date.month}-${message.date.year}';
+    if (diffrenceDate.inDays > 1) {
+      return time =
+          '${message.date.day}-${message.date.month}-${message.date.year}';
     } else {
       return time = '${message.date.hour}:${message.date.minute}';
     }
   }
 }
 
-
 class CchatBubbleFriend extends StatelessWidget {
-  const CchatBubbleFriend({required this.message, super.key});
+  const CchatBubbleFriend(
+      {required this.message, super.key, required this.snapshot});
   final MessagesModel message;
+  final DocumentSnapshot snapshot;
   @override
   Widget build(BuildContext context) {
+    void readMessage() async {
+      CollectionReference messages =
+          FirebaseFirestore.instance.collection('messages');
+
+      String documentId = snapshot.reference.id; 
+      final documId = messages.doc(documentId);
+      print(documId);
+      documId.update({'isRead': true});
+    }
+
+    readMessage();
     return Column(
       children: [
         Align(
@@ -96,34 +117,25 @@ class CchatBubbleFriend extends StatelessWidget {
                     message.messageText,
                     style: const TextStyle(color: Colors.white),
                   ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.check, color: Colors.grey,size: 22,),
-                    ],
-                  )
                 ],
               ),
             ),
           ),
         ),
-        
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10.0),
-          child: Align(
-            alignment: Alignment.topRight,
-            child: Text(getTime())),
+          child: Align(alignment: Alignment.topRight, child: Text(getTime())),
         )
       ],
     );
   }
-  
+
   String getTime() {
     Duration diffrenceDate = DateTime.now().difference(message.date);
     String time;
-    if(diffrenceDate.inDays>1) {
-      return time = '${message.date.day}-${message.date.month}-${message.date.year}';
+    if (diffrenceDate.inDays > 1) {
+      return time =
+          '${message.date.day}-${message.date.month}-${message.date.year}';
     } else {
       return time = '${message.date.hour}:${message.date.minute}';
     }
